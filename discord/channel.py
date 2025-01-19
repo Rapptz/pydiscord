@@ -1484,9 +1484,19 @@ class VoiceChannel(VocalGuildChannel):
         :attr:`~Permissions.manage_messages` bypass slowmode.
 
         .. versionadded:: 2.2
+    status: Optional[:class:`str`]
+        The status of the voice channel. ``None`` if no status is set.
+        This is not available for the fetch methods such as :func:`Guild.fetch_channel`
+        or :func:`Client.fetch_channel`
+
+        .. versionadded:: 2.5
     """
 
-    __slots__ = ()
+    __slots__ = ('status',)
+
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: VoiceChannelPayload) -> None:
+        super().__init__(state=state, guild=guild, data=data)
+        self.status: Optional[str] = data.get('status') or None  # empty string -> None
 
     def __repr__(self) -> str:
         attrs = [

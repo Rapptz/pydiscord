@@ -43,7 +43,7 @@ from .stage_instance import StageInstance
 from .sticker import GuildSticker
 from .threads import Thread
 from .integrations import PartialIntegration
-from .channel import ForumChannel, StageChannel, ForumTag
+from .channel import ForumChannel, StageChannel, ForumTag, VoiceChannel
 
 __all__ = (
     'AuditLogDiff',
@@ -239,6 +239,13 @@ def _transform_default_emoji(entry: AuditLogEntry, data: str) -> PartialEmoji:
     return PartialEmoji(name=data)
 
 
+def _transform_status(entry: AuditLogEntry, data: Union[int, str]) -> Union[enums.EventStatus, str]:
+    if entry.action.name.startswith('scheduled_event_'):
+        return enums.try_enum(enums.EventStatus, data)
+    else:
+        return data  # type: ignore  # voice channel status is str
+
+
 E = TypeVar('E', bound=enums.Enum)
 
 
@@ -332,7 +339,7 @@ class AuditLogChanges:
         'communication_disabled_until':          ('timed_out_until', _transform_timestamp),
         'expire_behavior':                       (None, _enum_transformer(enums.ExpireBehaviour)),
         'mfa_level':                             (None, _enum_transformer(enums.MFALevel)),
-        'status':                                (None, _enum_transformer(enums.EventStatus)),
+        'status':                                (None, _transform_status),
         'entity_type':                           (None, _enum_transformer(enums.EntityType)),
         'preferred_locale':                      (None, _enum_transformer(enums.Locale)),
         'image_hash':                            ('cover_image', _transform_cover_image),
@@ -590,6 +597,11 @@ class _AuditLogProxyMemberKickOrMemberRoleUpdate(_AuditLogProxy):
     integration_type: Optional[str]
 
 
+class _AuditLogProxyVoiceChannelStatusAction(_AuditLogProxy):
+    status: Optional[str]
+    channel: abc.GuildChannel
+
+
 class AuditLogEntry(Hashable):
     r"""Represents an Audit Log entry.
 
@@ -677,6 +689,7 @@ class AuditLogEntry(Hashable):
             _AuditLogProxyMessageBulkDelete,
             _AuditLogProxyAutoModAction,
             _AuditLogProxyMemberKickOrMemberRoleUpdate,
+            _AuditLogProxyVoiceChannelStatusAction,
             Member, User, None, PartialIntegration,
             Role, Object
         ] = None
@@ -752,6 +765,13 @@ class AuditLogEntry(Hashable):
             elif self.action.name.startswith('app_command'):
                 app_id = int(extra['application_id'])
                 self.extra = self._get_integration_by_app_id(app_id) or Object(app_id, type=PartialIntegration)
+
+            elif self.action.name.startswith('voice_channel_status'):
+                channel_id = int(extra['channel_id'])
+                status = extra.get('status')
+                self.extra = _AuditLogProxyVoiceChannelStatusAction(
+                    status=status, channel=self.guild.get_channel(channel_id) or Object(id=channel_id, type=VoiceChannel)
+                )
 
         # this key is not present when the above is present, typically.
         # It's a list of { new_value: a, old_value: b, key: c }
@@ -930,3 +950,6 @@ class AuditLogEntry(Hashable):
         from .webhook import Webhook
 
         return self._webhooks.get(target_id) or Object(target_id, type=Webhook)
+
+    def _convert_target_voice_channel_status(self, target_id: int) -> Union[abc.GuildChannel, Object]:
+        return self.guild.get_channel(target_id) or Object(id=target_id)
