@@ -3832,6 +3832,194 @@ of :class:`enum.Enum`.
 
         An alias for :attr:`.reply`.
 
+
+.. class:: ClanPlayStyle
+
+    Represents a clan play style.
+
+    .. versionadded:: 2.5
+
+    .. attribute:: none
+
+        The clan has no play style.
+
+    .. attribute:: social
+
+        A social clan. Also described as "Very Casual" on the UI.
+
+    .. attribute:: casual
+
+        A casual clan.
+
+    .. attribute:: competitive
+
+        A competitive clan.
+
+    .. attribute:: creative
+
+        A creative clan.
+
+    .. attribute:: very_competitive
+
+        A very competitive clan.
+
+
+.. class:: ClanBadgeType
+
+    Represents a clan badge type.
+
+    .. attribute:: sword
+
+        A sword icon badge.
+
+    .. attribute:: water_drop
+
+        A water drop icon badge.
+
+    .. attribute:: skull
+
+        A skull icon badge.
+
+    .. attribute:: toadstool
+
+        A toadstool icon badge.
+
+    .. attribute:: moon
+
+        A moon icon badge.
+
+    .. attribute:: lightning
+
+        A lightning icon badge.
+
+    .. attribute:: leaf
+
+        A leaf icon badge.
+
+    .. attribute:: heart
+
+        A heart icon badge.
+
+    .. attribute:: fire
+
+        A fire icon badge.
+
+    .. attribute:: compass
+
+        A compass icon badge.
+
+    .. attribute:: crosshairs
+
+        A crosshair icon badge.
+
+    .. attribute:: flower
+
+        A flower icon badge.
+
+    .. attribute:: force
+
+        A force icon badge.
+
+    .. attribute:: gem
+
+        A gem icon badge.
+
+    .. attribute:: lava
+
+        A lava icon badge.
+
+    .. attribute:: psychic
+
+        A psychic icon badge.
+
+    .. attribute:: smoke
+
+        A smoke icon badge.
+
+    .. attribute:: snow
+
+        A snow icon badge.
+
+    .. attribute:: sound
+
+        A sound icon badge.
+
+    .. attribute:: sun
+
+        A sun icon badge.
+
+    .. attribute:: wind
+
+        A wind icon badge.
+
+
+.. class:: ClanBannerStyle
+
+    Represents a clan banner style.
+
+    .. attribute:: night_sky
+
+        A night sky icon banner.
+
+    .. attribute:: castle
+
+        A castle icon banner.
+
+    .. attribute:: world_map
+
+        A world map icon banner.
+
+    .. attribute:: sea_foam
+
+        A sea foam icon banner.
+
+    .. attribute:: warp_tunnel
+
+        A warp tunnel icon banner.
+
+    .. attribute:: house
+
+        A house icon banner.
+
+    .. attribute:: height_map
+
+        A height map icon banner.
+
+    .. attribute:: mesh
+
+        A mesh icon banner.
+
+    .. attribute:: spatter
+
+        A spatter icon banner.
+
+
+.. class:: MemberVerificationFieldType
+
+    Represents a member verification field type.
+
+    .. attribute:: terms
+
+        The field has a set of guidelines the user must agree to. Fields with this type must have
+        :attr:`PartialMemberVerificationField.values` filled. This field's :attr:`MemberVerificationField.response`
+        will be a :class:`bool` representing whether the user has accepted or not to the terms.
+
+    .. attribute:: text_input
+
+        The field asks for a short response from the user. This field's :attr:`MemberVerificationField.response`
+        will be a :class:`str` representing the user input value.
+
+    .. attribute:: paragraph
+
+        The field asks for a long response from the user. This field's :attr:`MemberVerificationField.response`
+        will be a :class:`str` representing the user input value.
+
+    .. attribute:: multiple_choice
+
+        The user must choose an option from a list. Fields with this type must have
+        :attr:`PartialMemberVerificationField.choices` filled. This field's :attr:`MemberVerificationField.response`
+        will be a :class:`int` representing the index of the selected option.
+
 .. _discord-api-audit-logs:
 
 Audit Log Data
@@ -4882,6 +5070,24 @@ Member
     .. automethod:: typing
         :async-with:
 
+MemberVerificationField
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberVerificationField
+
+.. autoclass:: MemberVerificationField()
+    :members:
+    :inherited-members:
+
+
+MemberVerificationForm
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberVerificationForm
+
+.. autoclass:: MemberVerificationForm()
+    :members:
+
 Spotify
 ~~~~~~~~
 
@@ -5049,6 +5255,15 @@ CategoryChannel
     :members:
     :inherited-members:
 
+Clan
+~~~~
+
+.. attributetable:: Clan
+
+.. autoclass:: Clan()
+    :members:
+    :inherited-members:
+
 DMChannel
 ~~~~~~~~~
 
@@ -5074,6 +5289,14 @@ GroupChannel
 
     .. automethod:: typing
         :async-with:
+
+PartialClan
+~~~~~~~~~~~
+
+.. attributetable:: PartialClan
+
+.. autoclass:: PartialClan()
+    :members:
 
 PartialInviteGuild
 ~~~~~~~~~~~~~~~~~~~
@@ -5388,15 +5611,23 @@ PollAnswer
 .. autoclass:: PollAnswer()
     :members:
 
-.. _discord_api_data:
-
 MessageSnapshot
 ~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageSnapshot
 
-.. autoclass:: MessageSnapshot
+.. autoclass:: MessageSnapshot()
     :members:
+
+UserClan
+~~~~~~~~
+
+.. attributetable:: UserClan
+
+.. autoclass:: UserClan()
+    :members:
+
+.. _discord_api_data:
 
 Data Classes
 --------------
@@ -5699,6 +5930,15 @@ CallMessage
 .. attributetable:: CallMessage
 
 .. autoclass:: CallMessage()
+    :members:
+
+
+PartialMemberVerificationField
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PartialMemberVerificationField
+
+.. autoclass:: PartialMemberVerificationField
     :members:
 
 

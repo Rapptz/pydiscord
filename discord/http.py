@@ -95,6 +95,8 @@ if TYPE_CHECKING:
         voice,
         soundboard,
         subscription,
+        clan,
+        member_verification,
     )
     from .types.snowflake import Snowflake, SnowflakeList
     from .types.gateway import SessionStartLimit
@@ -1816,6 +1818,18 @@ class HTTPClient:
     def edit_incident_actions(self, guild_id: Snowflake, payload: guild.IncidentData) -> Response[guild.IncidentData]:
         return self.request(Route('PUT', '/guilds/{guild_id}/incident-actions', guild_id=guild_id), json=payload)
 
+    def get_guild_member_verification(
+        self, guild_id: Snowflake, *, with_guild: bool = MISSING, invite_code: str = MISSING
+    ) -> Response[member_verification.MemberVerificationForm]:
+        params = {}
+
+        if with_guild is not MISSING:
+            params['with_guild'] = with_guild
+        if invite_code is not MISSING:
+            params['invite_code'] = invite_code
+
+        return self.request(Route('GET', '/guilds/{guild_id}/member-verification', guild_id=guild_id), params=params)
+
     # Invite management
 
     def create_invite(
@@ -2530,6 +2544,17 @@ class HTTPClient:
                 '/applications/{application_id}/entitlements/{entitlement_id}',
                 application_id=application_id,
                 entitlement_id=entitlement_id,
+            ),
+        )
+
+    # Clans
+
+    def get_clan(self, guild_id: int) -> Response[clan.Clan]:
+        return self.request(
+            Route(
+                'GET',
+                '/discovery/{guild_id}/clan',
+                guild_id=guild_id,
             ),
         )
 

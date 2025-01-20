@@ -77,6 +77,10 @@ __all__ = (
     'VoiceChannelEffectAnimationType',
     'SubscriptionStatus',
     'MessageReferenceType',
+    'ClanPlayStyle',
+    'ClanBadgeType',
+    'ClanBannerStyle',
+    'MemberVerificationFieldType',
 )
 
 
@@ -861,6 +865,59 @@ class SubscriptionStatus(Enum):
     active = 0
     ending = 1
     inactive = 2
+
+
+class ClanPlayStyle(Enum):
+    none = 0
+    social = 1
+    casual = 2
+    competitive = 3
+    creative = 4
+    very_competitive = 5
+
+
+class ClanBadgeType(Enum):
+    sword = 0
+    water_drop = 1
+    skull = 2
+    toadstool = 3
+    moon = 4
+    lightning = 5
+    leaf = 6
+    heart = 7
+    fire = 8
+    compass = 9
+    crosshairs = 10
+    flower = 11
+    force = 12
+    gem = 13
+    lava = 14
+    psychic = 15
+    smoke = 16
+    snow = 17
+    sound = 18
+    sun = 19
+    wind = 20
+
+
+class ClanBannerStyle(Enum):
+    night_sky = 0
+    castle = 1
+    world_map = 2
+    sea_foam = 3
+    warp_tunnel = 4
+    house = 5
+    height_map = 6
+    mesh = 7
+    spatter = 8
+
+
+class MemberVerificationFieldType(Enum):
+    terms = "TERMS"
+    text_input = "TEXT_INPUT"
+    paragraph = "PARAGRAPH"
+    multiple_choice = "MULTIPLE_CHOICE"
+    # verification = "VERIFICATION" (deprecated)
 
 
 def create_unknown_value(cls: Type[E], val: Any) -> E:

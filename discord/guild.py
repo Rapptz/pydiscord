@@ -95,6 +95,8 @@ from .welcome_screen import WelcomeScreen, WelcomeChannel
 from .automod import AutoModRule, AutoModTrigger, AutoModRuleAction
 from .partial_emoji import _EmojiTag, PartialEmoji
 from .soundboard import SoundboardSound
+from .clan import Clan
+from .member_verification import MemberVerificationForm
 
 
 __all__ = (
@@ -4787,3 +4789,72 @@ class Guild(Hashable):
 
         data = await self._state.http.create_soundboard_sound(self.id, reason=reason, **payload)
         return SoundboardSound(guild=self, state=self._state, data=data)
+
+    def has_clan(self) -> bool:
+        """:class:`bool`: Whether there is a clan available for this guild.
+
+        .. versionadded:: 2.5
+        """
+        return 'CLAN' in self.features
+
+    async def fetch_clan(self) -> Clan:
+        """|coro|
+
+        Fetches this guild's clan.
+
+        .. versionadded:: 2.5
+
+        Raises
+        ------
+        ClientException
+            Guild does not have a clan.
+        HTTPException
+            An error occurred while fetching the clan info.
+
+        Returns
+        -------
+        :class:`Clan`
+            This guild's clan.
+        """
+
+        if not self.has_clan():
+            raise ClientException('Guild does not have a clan')
+
+        data = await self._state.http.get_clan(self.id)
+
+        return Clan(data=data, state=self._state)
+
+    async def fetch_member_verification_form(
+        self, *, with_guild: bool = MISSING, invite: Union[str, Invite] = MISSING
+    ) -> Optional[MemberVerificationForm]:
+        """|coro|
+
+        Fetches the current guild member verification form.
+
+        .. versionadded:: 2.5
+
+        Parameters
+        ----------
+        with_guild: :class:`bool`
+            Whether to include a guild snapshot on the member verification form.
+        invite: Union[:class:`str`, :class:`Invite`]
+            The invite code the member verification form is fetched from.
+
+        Raises
+        ------
+        HTTPException
+            Fetching the member verification form failed.
+
+        Returns
+        -------
+        Optional[:class:`MemberVerificationForm`]
+            The member verification form, or ``None``.
+        """
+
+        invite_code = MISSING
+
+        if invite is not MISSING:
+            invite_code = invite.code if isinstance(invite, Invite) else invite
+
+        form = await self._state.http.get_guild_member_verification(self.id, with_guild=with_guild, invite_code=invite_code)
+        return MemberVerificationForm._from_data(data=form, state=self._state, guild=self)

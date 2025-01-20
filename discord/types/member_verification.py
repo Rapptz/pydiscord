@@ -21,38 +21,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
 
-from .snowflake import Snowflake
-from .clan import UserClan
-from typing import Literal, Optional, TypedDict
-from typing_extensions import NotRequired
+from typing import TYPE_CHECKING, List, Literal, Optional, TypedDict, Union
 
+from .guild import GuildPreview
 
-class AvatarDecorationData(TypedDict):
-    asset: str
-    sku_id: Snowflake
+if TYPE_CHECKING:
+    from typing_extensions import NotRequired
 
-
-class PartialUser(TypedDict):
-    id: Snowflake
-    username: str
-    discriminator: str
-    avatar: Optional[str]
-    global_name: Optional[str]
-    avatar_decoration_data: NotRequired[AvatarDecorationData]
+MemberVerificationFieldType = Literal[
+    'TERMS',
+    'MULTIPLE_CHOICE',
+    'TEXT_INPUT',
+    'PARAGRAPH',
+    # 'VERIFICATION',
+]
 
 
-PremiumType = Literal[0, 1, 2, 3]
+class MemberVerificationField(TypedDict):
+    field_type: MemberVerificationFieldType
+    label: str
+    choices: NotRequired[List[str]]
+    values: NotRequired[Optional[List[str]]]
+    response: NotRequired[Union[str, int, bool]]
+    required: bool
+    description: Optional[str]
+    automations: Optional[List[str]]
+    placeholder: NotRequired[Optional[str]]
 
 
-class User(PartialUser, total=False):
-    bot: bool
-    system: bool
-    mfa_enabled: bool
-    locale: str
-    verified: bool
-    email: Optional[str]
-    flags: int
-    premium_type: PremiumType
-    public_flags: int
-    clan: NotRequired[Optional[UserClan]]
+class MemberVerificationForm(TypedDict):
+    version: str
+    form_fields: List[MemberVerificationField]
+    description: Optional[str]
+    guild: Optional[GuildPreview]

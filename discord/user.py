@@ -32,6 +32,7 @@ from .colour import Colour
 from .enums import DefaultAvatar
 from .flags import PublicUserFlags
 from .utils import snowflake_time, _bytes_to_base64_data, MISSING, _get_as_snowflake
+from .clan import UserClan
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -71,6 +72,7 @@ class BaseUser(_UserTag):
         '_public_flags',
         '_state',
         '_avatar_decoration_data',
+        'clan',
     )
 
     if TYPE_CHECKING:
@@ -86,6 +88,7 @@ class BaseUser(_UserTag):
         _accent_colour: Optional[int]
         _public_flags: int
         _avatar_decoration_data: Optional[AvatarDecorationData]
+        clan: Optional[UserClan]
 
     def __init__(self, *, state: ConnectionState, data: Union[UserPayload, PartialUserPayload]) -> None:
         self._state = state
@@ -123,6 +126,12 @@ class BaseUser(_UserTag):
         self.bot = data.get('bot', False)
         self.system = data.get('system', False)
         self._avatar_decoration_data = data.get('avatar_decoration_data')
+
+        clan = data.get('clan')
+        self.clan = None
+
+        if clan:
+            self.clan = UserClan(data=clan, state=self._state)
 
     @classmethod
     def _copy(cls, user: Self) -> Self:
@@ -516,6 +525,8 @@ class User(BaseUser, discord.abc.Messageable):
         Specifies if the user is a bot account.
     system: :class:`bool`
         Specifies if the user is a system user (i.e. represents Discord officially).
+    clan: Optional[:class:`UserClan`]
+        The clan the user belongs to.
     """
 
     __slots__ = ('__weakref__',)
