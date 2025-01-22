@@ -3213,6 +3213,11 @@ class DMChannel(discord.abc.Messageable, discord.abc.PrivateChannel, Hashable):
         return f'https://discord.com/channels/@me/{self.id}'
 
     @property
+    def mention(self) -> str:
+        """:class:`str`: The string that allows you to mention the channel."""
+        return f'<#{self.id}>'
+
+    @property
     def created_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: Returns the direct message channel's creation time in UTC."""
         return utils.snowflake_time(self.id)
@@ -3390,6 +3395,11 @@ class GroupChannel(discord.abc.Messageable, discord.abc.PrivateChannel, Hashable
         .. versionadded:: 2.0
         """
         return f'https://discord.com/channels/@me/{self.id}'
+
+    @property
+    def mention(self) -> str:
+        """:class:`str`: The string that allows you to mention the channel."""
+        return f'<#{self.id}>'
 
     def permissions_for(self, obj: Snowflake, /) -> Permissions:
         """Handles permission resolution for a :class:`User`.
