@@ -557,6 +557,27 @@ class VoiceClient(VoiceProtocol):
 
         self._player.set_source(value)
 
+    async def wait_until_done(self) -> Optional[Exception]:
+        """|coro|
+
+        Waits for the audio player to finish playback and returns any encountered error.
+
+        .. versionadded:: 2.4
+
+        Returns
+        --------
+        Optional[:class:`Exception`]
+            The exception the player encountered during playback, or ``None``.
+        """
+
+        if not self.is_connected():
+            raise ClientException('Not connected to voice.')
+
+        if self._player is None:
+            raise ValueError('Not playing anything.')
+
+        return await self._player.wait_async()
+
     def send_audio_packet(self, data: bytes, *, encode: bool = True) -> None:
         """Sends an audio packet composed of the data.
 

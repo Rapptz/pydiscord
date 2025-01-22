@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+
 from __future__ import annotations
 
 import threading
@@ -721,6 +722,8 @@ class AudioPlayer(threading.Thread):
         self._current_error: Optional[Exception] = None
         self._lock: threading.Lock = threading.Lock()
 
+        self._end_future = client.loop.create_future()
+
         if after is not None and not callable(after):
             raise TypeError('Expected a callable for the "after" parameter.')
 
@@ -778,7 +781,8 @@ class AudioPlayer(threading.Thread):
             self.stop()
         finally:
             self._call_after()
-            self.source.cleanup()
+            self._cleanup()
+            self.client.loop.call_soon_threadsafe(self._end_future.set_result, self._current_error)
 
     def _call_after(self) -> None:
         error = self._current_error
@@ -791,6 +795,12 @@ class AudioPlayer(threading.Thread):
                 _log.exception('Calling the after function failed.', exc_info=exc)
         elif error:
             _log.exception('Exception in voice thread %s', self.name, exc_info=error)
+
+    def _cleanup(self) -> None:
+        try:
+            self.source.cleanup()
+        except Exception:
+            _log.exception("Error cleaning up audio source %s", self.source)
 
     def stop(self) -> None:
         self._end.set()
@@ -820,6 +830,9 @@ class AudioPlayer(threading.Thread):
             self.pause(update_speaking=False)
             self.source = source
             self.resume(update_speaking=False)
+
+    async def wait_async(self) -> Optional[Exception]:
+        return await self._end_future
 
     def _speak(self, speaking: SpeakingState) -> None:
         try:
