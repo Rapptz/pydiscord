@@ -90,6 +90,9 @@ if TYPE_CHECKING:
     )
     from ..types.emoji import PartialEmoji as PartialEmojiPayload
     from ..types.snowflake import SnowflakeList
+    from ..types.interactions import (
+        InteractionCallback as InteractionCallbackResponsePayload,
+    )
 
     BE = TypeVar('BE', bound=BaseException)
     _State = Union[ConnectionState, '_WebhookState']
@@ -434,13 +437,17 @@ class AsyncWebhookAdapter:
         proxy: Optional[str] = None,
         proxy_auth: Optional[aiohttp.BasicAuth] = None,
         params: MultipartParameters,
-    ) -> Response[None]:
+        with_response: bool = MISSING,
+    ) -> Response[Optional[InteractionCallbackResponsePayload]]:
         route = Route(
             'POST',
             '/interactions/{webhook_id}/{webhook_token}/callback',
             webhook_id=interaction_id,
             webhook_token=token,
         )
+
+        if with_response is not MISSING:
+            request_params = {'with_response': with_response}
 
         if params.files:
             return self.request(
@@ -450,9 +457,17 @@ class AsyncWebhookAdapter:
                 proxy_auth=proxy_auth,
                 files=params.files,
                 multipart=params.multipart,
+                params=request_params,
             )
         else:
-            return self.request(route, session=session, proxy=proxy, proxy_auth=proxy_auth, payload=params.payload)
+            return self.request(
+                route,
+                session=session,
+                proxy=proxy,
+                proxy_auth=proxy_auth,
+                payload=params.payload,
+                params=request_params,
+            )
 
     def get_original_interaction_response(
         self,
