@@ -48,6 +48,7 @@ from typing import (
     overload,
 )
 import warnings
+import re
 
 from . import utils, abc
 from .role import Role
@@ -447,6 +448,7 @@ class Guild(Hashable):
         'max_stage_video_users',
         '_incidents_data',
         '_soundboard_sounds',
+        '_acronym',
     )
 
     _PREMIUM_GUILD_LIMITS: ClassVar[Dict[Optional[int], _GuildLimit]] = {
@@ -578,6 +580,8 @@ class Guild(Hashable):
             pass
 
         self.name: str = guild.get('name', '')
+        self._acronym = re.sub(r"\s", "", re.sub(r"\w+", lambda e: e.group(0)[0], re.sub(r"'s ", " ", self.name)))
+
         self.verification_level: VerificationLevel = try_enum(VerificationLevel, guild.get('verification_level'))
         self.default_notifications: NotificationLevel = try_enum(
             NotificationLevel, guild.get('default_message_notifications')
@@ -4788,3 +4792,11 @@ class Guild(Hashable):
 
         data = await self._state.http.create_soundboard_sound(self.id, reason=reason, **payload)
         return SoundboardSound(guild=self, state=self._state, data=data)
+
+    @property
+    def acronym(self) -> str:
+        """:class:`str`: Returns the acronym that shows up in place of a guild icon
+
+        .. versionadded:: 2.5
+        """
+        return self._acronym
