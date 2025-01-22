@@ -77,6 +77,7 @@ __all__ = (
     'VoiceChannelEffectAnimationType',
     'SubscriptionStatus',
     'MessageReferenceType',
+    'ScheduledEventRecurrenceFrequency',
 )
 
 
@@ -861,6 +862,13 @@ class SubscriptionStatus(Enum):
     active = 0
     ending = 1
     inactive = 2
+
+
+class ScheduledEventRecurrenceFrequency(Enum):
+    yearly = 0
+    monthly = 1
+    weekly = 2
+    daily = 3
 
 
 def create_unknown_value(cls: Type[E], val: Any) -> E:
