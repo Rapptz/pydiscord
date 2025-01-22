@@ -277,7 +277,11 @@ def replace_parameters(
 ) -> List[inspect.Parameter]:
     # Need to convert commands.Parameter back to inspect.Parameter so this will be a bit ugly
     params = signature.parameters.copy()
+
+    pending_rename: Dict[str, str] = {}
+    pending_description: Dict[str, str] = {}
     for name, parameter in parameters.items():
+
         converter = parameter.converter
         # Parameter.converter properly infers from the default and has a str default
         # This allows the actual signature to inherit this property
@@ -287,6 +291,12 @@ def replace_parameters(
         if parameter.default is not parameter.empty:
             default = _CallableDefault(parameter.default) if callable(parameter.default) else parameter.default
             param = param.replace(default=default)
+
+        if parameter.description:
+            pending_description[name] = parameter.description
+
+        if parameter.displayed_name:
+            pending_rename[name] = parameter.displayed_name
 
         if isinstance(param.default, Parameter):
             # If we're here, then it hasn't been handled yet so it should be removed completely
@@ -298,6 +308,12 @@ def replace_parameters(
             continue
 
         params[name] = param
+
+    if pending_description:
+        app_commands.describe(**pending_description)(callback)
+
+    if pending_rename:
+        app_commands.rename(**pending_rename)(callback)
 
     return list(params.values())
 
