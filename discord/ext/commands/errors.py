@@ -47,6 +47,7 @@ __all__ = (
     'CommandError',
     'MissingRequiredArgument',
     'MissingRequiredAttachment',
+    'MissingRequiredSticker',
     'BadArgument',
     'PrivateMessageOnly',
     'NoPrivateMessage',
@@ -204,6 +205,35 @@ class MissingRequiredAttachment(UserInputError):
     def __init__(self, param: Parameter) -> None:
         self.param: Parameter = param
         super().__init__(f'{param.displayed_name or param.name} is a required argument that is missing an attachment.')
+
+
+class MissingRequiredSticker(UserInputError):
+    """Exception raised when parsing a command and a parameter
+    that requires a sticker is not given.
+
+    This inherits from :exc:`UserInputError`
+
+    .. versionadded:: 2.5
+
+    Attributes
+    -----------
+    param: :class:`Parameter`
+        The argument that is missing a sticker.
+    """
+
+    def __init__(self, param: Parameter) -> None:
+        from ...sticker import GuildSticker, StandardSticker
+
+        self.param: Parameter = param
+        converter = param.converter
+        if converter == GuildSticker:
+            sticker_type = 'server sticker'
+        elif converter == StandardSticker:
+            sticker_type = 'standard sticker'
+        else:
+            sticker_type = 'sticker'
+
+        super().__init__(f'{param.displayed_name or param.name} is a required argument that is missing a {sticker_type}.')
 
 
 class TooManyArguments(UserInputError):

@@ -723,6 +723,47 @@ Note that using a :class:`discord.Attachment` converter after a :class:`~ext.com
 
 If an attachment is expected but not given, then :exc:`~ext.commands.MissingRequiredAttachment` is raised to the error handlers.
 
+
+Stickers
+^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.5
+
+Annotating a parameter with any of the following sticker types will automatically get the uploaded sticker on a message and return the corresponding object:
+
+- :class:`~discord.StickerItem`
+- :class:`~discord.Sticker`
+- :class:`~discord.StandardSticker`
+- :class:`~discord.GuildSticker`
+
+Consider the following example:
+
+.. code-block:: python3
+
+    import discord
+
+    @bot.command()
+    async def sticker(ctx, sticker: discord.Sticker):
+        await ctx.send(f'You have uploaded {sticker.name} with format: {sticker.format}!')
+
+When this command is invoked, the user must directly upload a sticker for the command body to be executed. When combined with the :data:`typing.Optional` converter, the user does not have to provide a sticker.
+
+.. code-block:: python3
+
+    import typing
+    import discord
+
+    @bot.command()
+    async def upload(ctx, attachment: typing.Optional[discord.GuildSticker]):
+        if attachment is None:
+            await ctx.send('You did not upload anything!')
+        else:
+            await ctx.send(f'You have uploaded {sticker.name} with format: {sticker.format} from server: {sticker.guild}!')
+
+If a sticker is expected but not given, then :exc:`~ext.commands.MissingRequiredSticker` is raised to the error handlers.
+
+:class:`~ext.commands.Greedy` is supported too but at the moment, users can only upload one sticker at a time.
+
 .. _ext_commands_flag_converter:
 
 FlagConverter

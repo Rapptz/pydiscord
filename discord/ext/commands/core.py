@@ -96,6 +96,7 @@ T = TypeVar('T')
 CommandT = TypeVar('CommandT', bound='Command[Any, ..., Any]')
 # CHT = TypeVar('CHT', bound='Check')
 GroupT = TypeVar('GroupT', bound='Group[Any, ..., Any]')
+SpecialDataT = TypeVar('SpecialDataT', discord.Attachment, discord.StickerItem)
 
 if TYPE_CHECKING:
     P = ParamSpec('P')
@@ -252,6 +253,31 @@ def hooked_wrapped_callback(
     return wrapped
 
 
+async def _convert_stickers(
+    sticker_type: Type[Union[discord.StickerItem, discord.Sticker, discord.StandardSticker, discord.GuildSticker]],
+    stickers: _SpecialIterator[discord.StickerItem],
+    param: Parameter,
+    /,
+) -> Union[discord.StickerItem, discord.Sticker, discord.StandardSticker, discord.GuildSticker]:
+    if sticker_type is discord.StickerItem:
+        try:
+            return next(stickers)
+        except StopIteration:
+            raise MissingRequiredSticker(param)
+
+    while not stickers.is_empty():
+        try:
+            sticker = next(stickers)
+        except StopIteration:
+            raise MissingRequiredSticker(param)
+
+        fetched = await sticker.fetch()
+        if isinstance(fetched, sticker_type):
+            return fetched
+
+    raise MissingRequiredSticker(param)
+
+
 class _CaseInsensitiveDict(dict):
     def __contains__(self, k):
         return super().__contains__(k.casefold())
@@ -272,15 +298,15 @@ class _CaseInsensitiveDict(dict):
         super().__setitem__(k.casefold(), v)
 
 
-class _AttachmentIterator:
-    def __init__(self, data: List[discord.Attachment]):
-        self.data: List[discord.Attachment] = data
+class _SpecialIterator(Generic[SpecialDataT]):
+    def __init__(self, data: List[SpecialDataT]):
+        self.data: List[SpecialDataT] = data
         self.index: int = 0
 
     def __iter__(self) -> Self:
         return self
 
-    def __next__(self) -> discord.Attachment:
+    def __next__(self) -> SpecialDataT:
         try:
             value = self.data[self.index]
         except IndexError:
@@ -649,7 +675,14 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         finally:
             ctx.bot.dispatch('command_error', ctx, error)
 
-    async def transform(self, ctx: Context[BotT], param: Parameter, attachments: _AttachmentIterator, /) -> Any:
+    async def transform(
+        self,
+        ctx: Context[BotT],
+        param: Parameter,
+        attachments: _SpecialIterator[discord.Attachment],
+        stickers: _SpecialIterator[discord.StickerItem],
+        /,
+    ) -> Any:
         converter = param.converter
         consume_rest_is_special = param.kind == param.KEYWORD_ONLY and not self.rest_is_raw
         view = ctx.view
@@ -661,6 +694,15 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             # Special case for Greedy[discord.Attachment] to consume the attachments iterator
             if converter.converter is discord.Attachment:
                 return list(attachments)
+            # Special case for Greedy[discord.StickerItem] to consume the stickers iterator
+            elif converter.converter in (
+                discord.StickerItem,
+                discord.Sticker,
+                discord.StandardSticker,
+                discord.GuildSticker,
+            ):
+                # can only send one sticker at a time
+                return [await _convert_stickers(converter.converter, stickers, param)]
 
             if param.kind in (param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY):
                 return await self._transform_greedy_pos(ctx, param, param.required, converter.constructed_converter)
@@ -679,12 +721,27 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             except StopIteration:
                 raise MissingRequiredAttachment(param)
 
-        if self._is_typing_optional(param.annotation) and param.annotation.__args__[0] is discord.Attachment:
-            if attachments.is_empty():
-                # I have no idea who would be doing Optional[discord.Attachment] = 1
-                # but for those cases then 1 should be returned instead of None
-                return None if param.default is param.empty else param.default
-            return next(attachments)
+        # Try to detect Optional[discord.StickerItem] or discord.StickerItem special converter
+        if converter in (discord.StickerItem, discord.Sticker, discord.StandardSticker, discord.GuildSticker):
+            return await _convert_stickers(converter, stickers, param)
+
+        if self._is_typing_optional(param.annotation):
+            if param.annotation.__args__[0] is discord.Attachment:
+                if attachments.is_empty():
+                    # I have no idea who would be doing Optional[discord.Attachment] = 1
+                    # but for those cases then 1 should be returned instead of None
+                    return None if param.default is param.empty else param.default
+                return next(attachments)
+            elif param.annotation.__args__[0] in (
+                discord.StickerItem,
+                discord.Sticker,
+                discord.StandardSticker,
+                discord.GuildSticker,
+            ):
+                if stickers.is_empty():
+                    return None if param.default is param.empty else param.default
+
+                return await _convert_stickers(param.annotation.__args__[0], stickers, param)
 
         if view.eof:
             if param.kind == param.VAR_POSITIONAL:
@@ -834,7 +891,9 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         ctx.kwargs = {}
         args = ctx.args
         kwargs = ctx.kwargs
-        attachments = _AttachmentIterator(ctx.message.attachments)
+
+        attachments = _SpecialIterator(ctx.message.attachments)
+        stickers = _SpecialIterator(ctx.message.stickers)
 
         view = ctx.view
         iterator = iter(self.params.items())
@@ -842,7 +901,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         for name, param in iterator:
             ctx.current_parameter = param
             if param.kind in (param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY):
-                transformed = await self.transform(ctx, param, attachments)
+                transformed = await self.transform(ctx, param, attachments, stickers)
                 args.append(transformed)
             elif param.kind == param.KEYWORD_ONLY:
                 # kwarg only param denotes "consume rest" semantics
@@ -850,14 +909,14 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                     ctx.current_argument = argument = view.read_rest()
                     kwargs[name] = await run_converters(ctx, param.converter, argument, param)
                 else:
-                    kwargs[name] = await self.transform(ctx, param, attachments)
+                    kwargs[name] = await self.transform(ctx, param, attachments, stickers)
                 break
             elif param.kind == param.VAR_POSITIONAL:
                 if view.eof and self.require_var_positional:
                     raise MissingRequiredArgument(param)
                 while not view.eof:
                     try:
-                        transformed = await self.transform(ctx, param, attachments)
+                        transformed = await self.transform(ctx, param, attachments, stickers)
                         args.append(transformed)
                     except RuntimeError:
                         break
@@ -1200,6 +1259,22 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                     result.append(f'[{name} (upload files)]...')
                 else:
                     result.append(f'<{name} (upload a file)>')
+                continue
+
+            if annotation in (discord.StickerItem, discord.Sticker, discord.StandardSticker, discord.GuildSticker):
+                if annotation is discord.GuildSticker:
+                    sticker_type = 'server sticker'
+                elif annotation is discord.StandardSticker:
+                    sticker_type = 'standard sticker'
+                else:
+                    sticker_type = 'sticker'
+
+                if optional:
+                    result.append(f'[{name} (upload a {sticker_type})]')
+                elif greedy:
+                    result.append(f'[{name} (upload {sticker_type}s)]...')
+                else:
+                    result.append(f'<{name} (upload a {sticker_type})>')
                 continue
 
             # for typing.Literal[...], typing.Optional[typing.Literal[...]], and Greedy[typing.Literal[...]], the
