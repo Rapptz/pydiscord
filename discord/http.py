@@ -2620,6 +2620,7 @@ class HTTPClient:
             'cover_image',
             'interactions_endpoint_url ',
             'tags',
+            'integration_types_config',
         )
 
         payload = {k: v for k, v in payload.items() if k in valid_keys}

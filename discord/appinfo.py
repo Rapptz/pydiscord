@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING, Optional
+from typing import List, TYPE_CHECKING, Literal, Optional
 
 from . import utils
 from .asset import Asset
@@ -41,6 +41,7 @@ if TYPE_CHECKING:
         PartialAppInfo as PartialAppInfoPayload,
         Team as TeamPayload,
         InstallParams as InstallParamsPayload,
+        AppIntegrationTypeConfig as AppIntegrationTypeConfigPayload,
     )
     from .user import User
     from .state import ConnectionState
@@ -49,6 +50,7 @@ __all__ = (
     'AppInfo',
     'PartialAppInfo',
     'AppInstallParams',
+    'IntegrationTypeConfig',
 )
 
 
@@ -180,6 +182,7 @@ class AppInfo:
         'redirect_uris',
         'approximate_guild_count',
         'approximate_user_install_count',
+        '_integration_types_config',
     )
 
     def __init__(self, state: ConnectionState, data: AppInfoPayload):
@@ -218,6 +221,9 @@ class AppInfo:
         self.redirect_uris: List[str] = data.get('redirect_uris', [])
         self.approximate_guild_count: int = data.get('approximate_guild_count', 0)
         self.approximate_user_install_count: Optional[int] = data.get('approximate_user_install_count')
+        self._integration_types_config: Dict[Literal["0", "1"], AppIntegrationTypeConfigPayload] = data.get(
+            'integration_types_config', {}
+        )
 
     def __repr__(self) -> str:
         return (
@@ -260,6 +266,36 @@ class AppInfo:
         """
         return ApplicationFlags._from_value(self._flags)
 
+    @property
+    def guild_integration_config(self) -> Optional[IntegrationTypeConfig]:
+        """Optional[:class:`IntegrationTypeConfig`]: The default settings for the
+        application's installation context in a guild.
+
+        .. versionadded:: 2.5
+        """
+        if not self._integration_types_config:
+            return None
+
+        try:
+            return IntegrationTypeConfig(self._integration_types_config['0'])
+        except KeyError:
+            return None
+
+    @property
+    def user_integration_config(self) -> Optional[IntegrationTypeConfig]:
+        """Optional[:class:`IntegrationTypeConfig`]: The default settings for the
+        application's installation context as a user.
+
+        .. versionadded:: 2.5
+        """
+        if not self._integration_types_config:
+            return None
+
+        try:
+            return IntegrationTypeConfig(self._integration_types_config['1'])
+        except KeyError:
+            return None
+
     async def edit(
         self,
         *,
@@ -274,6 +310,10 @@ class AppInfo:
         cover_image: Optional[bytes] = MISSING,
         interactions_endpoint_url: Optional[str] = MISSING,
         tags: Optional[List[str]] = MISSING,
+        guild_install_scopes: Optional[List[str]] = MISSING,
+        guild_install_permissions: Optional[Permissions] = MISSING,
+        user_install_scopes: Optional[List[str]] = MISSING,
+        user_install_permissions: Optional[Permissions] = MISSING,
     ) -> AppInfo:
         r"""|coro|
 
@@ -315,6 +355,24 @@ class AppInfo:
             over the gateway. Can be ``None`` to remove the URL.
         tags: Optional[List[:class:`str`]]
             The new list of tags describing the functionality of the application. Can be ``None`` to remove the tags.
+        guild_install_scopes: Optional[List[:class:`str`]]
+            The new list of :ddocs:`OAuth2 scopes <topics/oauth2#shared-resources-oauth2-scopes>` of
+            the default guild installation context. Can be ``None`` to remove the scopes.
+
+            .. versionadded: 2.5
+        guild_install_permissions: Optional[:class:`Permissions`]
+            The new permissions of the default guild installation context. Can be ``None`` to remove the permissions.
+
+            .. versionadded: 2.5
+        user_install_scopes: Optional[List[:class:`str`]]
+            The new list of :ddocs:`OAuth2 scopes <topics/oauth2#shared-resources-oauth2-scopes>` of
+            the default user installation context. Can be ``None`` to remove the scopes.
+
+            .. versionadded: 2.5
+        user_install_permissions: Optional[:class:`Permissions`]
+            The new permissions of the default user installation context. Can be ``None`` to remove the permissions.
+
+            .. versionadded: 2.5
         reason: Optional[:class:`str`]
             The reason for editing the application. Shows up on the audit log.
 
@@ -325,6 +383,7 @@ class AppInfo:
         ValueError
             The image format passed in to ``icon`` or ``cover_image`` is invalid. This is also raised
             when ``install_params_scopes`` and ``install_params_permissions`` are incompatible with each other.
+            or when ``guild_install_scopes`` and ``guild_install_permissions`` are incompatible with each other.
 
         Returns
         -------
@@ -389,6 +448,51 @@ class AppInfo:
 
         if tags is not MISSING:
             payload['tags'] = tags
+
+        integration_types_config: Dict[str, Any] = {}
+        if guild_install_scopes is not MISSING or guild_install_permissions is not MISSING:
+            guild_install_params: Optional[Dict[str, Any]] = {}
+            if guild_install_scopes in (None, MISSING):
+                guild_install_scopes = []
+
+            if "bot" not in guild_install_scopes and guild_install_permissions is not MISSING:
+                raise ValueError("'bot' must be in guild_install_scopes if guild_install_permissions is set")
+
+            if guild_install_permissions in (None, MISSING):
+                guild_install_params['permissions'] = 0
+            else:
+                guild_install_params['permissions'] = guild_install_permissions.value
+
+            guild_install_params['scopes'] = guild_install_scopes
+
+            integration_types_config['0'] = {'oauth2_install_params': guild_install_params or None}
+        else:
+            if guild_install_permissions is not MISSING:
+                raise ValueError("guild_install_scopes must be set if guild_install_permissions is set")
+
+        if user_install_scopes is not MISSING or user_install_permissions is not MISSING:
+            user_install_params: Optional[Dict[str, Any]] = {}
+            if user_install_scopes in (None, MISSING):
+                user_install_scopes = []
+
+            if "bot" not in user_install_scopes and user_install_permissions is not MISSING:
+                raise ValueError("'bot' must be in user_install_scopes if user_install_permissions is set")
+
+            if user_install_permissions in (None, MISSING):
+                user_install_params['permissions'] = 0
+            else:
+                user_install_params['permissions'] = user_install_permissions.value
+
+            user_install_params['scopes'] = user_install_scopes
+
+            integration_types_config['1'] = {'oauth2_install_params': user_install_params or None}
+        else:
+            if user_install_permissions is not MISSING:
+                raise ValueError("user_install_scopes must be set if user_install_permissions is set")
+
+        if integration_types_config:
+            payload['integration_types_config'] = integration_types_config
+
         data = await self._state.http.edit_application_info(reason=reason, payload=payload)
         return AppInfo(data=data, state=self._state)
 
@@ -520,3 +624,22 @@ class AppInstallParams:
     def __init__(self, data: InstallParamsPayload) -> None:
         self.scopes: List[str] = data.get('scopes', [])
         self.permissions: Permissions = Permissions(int(data['permissions']))
+
+
+class IntegrationTypeConfig:
+    """Represents the default settings for the application's installation context.
+
+    .. versionadded:: 2.5
+
+    Attributes
+    ----------
+    oauth2_install_params: Optional[:class:`AppInstallParams`]
+        The install params for this installation context's default in-app authorization link.
+    """
+
+    def __init__(self, data: AppIntegrationTypeConfigPayload) -> None:
+        self.oauth2_install_params: Optional[AppInstallParams] = None
+        try:
+            self.oauth2_install_params = AppInstallParams(data['oauth2_install_params'])  # type: ignore # EAFP
+        except KeyError:
+            pass

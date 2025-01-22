@@ -80,6 +80,14 @@ AppInstallParams
 .. autoclass:: AppInstallParams()
     :members:
 
+IntegrationTypeConfig
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: IntegrationTypeConfig
+
+.. autoclass:: IntegrationTypeConfig()
+    :members:
+
 Team
 ~~~~~
 
