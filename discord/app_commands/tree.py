@@ -200,7 +200,9 @@ class CommandTree(Generic[ClientT]):
 
         return AppCommand(data=command, state=self._state)
 
-    async def fetch_commands(self, *, guild: Optional[Snowflake] = None) -> List[AppCommand]:
+    async def fetch_commands(
+        self, *, guild: Optional[Snowflake] = None, with_localizations: bool = False
+    ) -> List[AppCommand]:
         """|coro|
 
         Fetches the application's current commands.
@@ -217,6 +219,10 @@ class CommandTree(Generic[ClientT]):
         guild: Optional[:class:`~discord.abc.Snowflake`]
             The guild to fetch the commands from. If not passed then global commands
             are fetched instead.
+        with_localizations: :class:`bool`
+            Whether to fetch the localizations for the commands. Defaults to ``False``.
+
+            .. versionadded:: 2.4
 
         Raises
         -------
@@ -234,9 +240,13 @@ class CommandTree(Generic[ClientT]):
             raise MissingApplicationID
 
         if guild is None:
-            commands = await self._http.get_global_commands(self.client.application_id)
+            commands = await self._http.get_global_commands(
+                self.client.application_id, with_localizations=with_localizations
+            )
         else:
-            commands = await self._http.get_guild_commands(self.client.application_id, guild.id)
+            commands = await self._http.get_guild_commands(
+                self.client.application_id, guild.id, with_localizations=with_localizations
+            )
 
         return [AppCommand(data=data, state=self._state) for data in commands]
 
