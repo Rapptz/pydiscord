@@ -768,6 +768,7 @@ class AppCommandType(Enum):
     chat_input = 1
     user = 2
     message = 3
+    primary_entry_point = 4
 
 
 class AppCommandPermissionType(Enum):
@@ -861,6 +862,11 @@ class SubscriptionStatus(Enum):
     active = 0
     ending = 1
     inactive = 2
+
+
+class EntryPointCommandHandlerType(Enum):
+    app_handler = 1
+    discord_launch_activity = 2
 
 
 def create_unknown_value(cls: Type[E], val: Any) -> E:

@@ -31,7 +31,7 @@ from .channel import ChannelType
 from .snowflake import Snowflake
 from .interactions import InteractionContextType
 
-ApplicationCommandType = Literal[1, 2, 3]
+ApplicationCommandType = Literal[1, 2, 3, 4]
 ApplicationCommandOptionType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 ApplicationIntegrationType = Literal[0, 1]
 
@@ -162,6 +162,15 @@ class _ChatInputApplicationCommand(_BaseApplicationCommand, total=False):
     ]
 
 
+EntryPointCommandHandlerType = Literal[1, 2]
+
+
+class _PrimaryEntryPointApplicationCommand(_BaseApplicationCommand):
+    description: Required[str]
+    type: Literal[4]
+    handler: EntryPointCommandHandlerType
+
+
 class _BaseContextMenuApplicationCommand(_BaseApplicationCommand):
     description: Literal[""]
 
@@ -178,6 +187,7 @@ GlobalApplicationCommand = Union[
     _ChatInputApplicationCommand,
     _UserApplicationCommand,
     _MessageApplicationCommand,
+    _PrimaryEntryPointApplicationCommand,
 ]
 
 

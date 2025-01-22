@@ -430,6 +430,11 @@ Enumerations
     .. attribute:: message
 
         A message context menu command.
+    .. attribute:: primary_entry_point
+
+        .. versionadded:: 2.5
+        
+        A command that represents the primary way to invoke an app's Activity
 
 .. class:: AppCommandPermissionType
 
@@ -446,6 +451,21 @@ Enumerations
     .. attribute:: user
 
         The permission is for a user.
+
+.. class:: EntryPointCommandHandlerType
+
+    Represents the type of an entry point command handler.
+
+    .. versionadded:: 2.5
+
+    .. attribute:: app_handler
+
+	    The app handles the interaction using an interaction token.
+
+    .. attribute:: discord_launch_activity
+
+        Discord handles the interaction by launching an Activity and 
+        sending a follow-up message without coordinating with the app.
 
 .. _discord_ui_kit:
 
