@@ -325,18 +325,7 @@ class UserConverter(IDConverter[discord.User]):
 
             return result  # type: ignore
 
-        username, _, discriminator = argument.rpartition('#')
-
-        # If # isn't found then "discriminator" actually has the username
-        if not username:
-            discriminator, username = username, discriminator
-
-        if discriminator == '0' or (len(discriminator) == 4 and discriminator.isdigit()):
-            predicate = lambda u: u.name == username and u.discriminator == discriminator
-        else:
-            predicate = lambda u: u.name == argument or u.global_name == argument
-
-        result = discord.utils.find(predicate, state._users.values())
+        result = ctx.bot.get_user_named(argument)
         if result is None:
             raise UserNotFound(argument)
 

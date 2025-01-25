@@ -1092,6 +1092,51 @@ class Client:
         """
         return self._connection.get_user(id)
 
+    def get_user_named(self, name: str, /) -> Optional[User]:
+        """Returns the first user found that matches the name provided.
+
+        The name is looked up in the following order:
+
+        - Username#Discriminator (deprecated)
+        - Username#0 (deprecated, only gets users that migrated from their discriminator)
+        - Global name
+        - Username
+
+        If no user is found, ``None`` is returned.
+
+        .. versionadded:: 2.4
+        .. deprecated:: 2.4
+
+            Looking up users via discriminator due to Discord API change.
+
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the user to lookup.
+
+        Returns
+        --------
+        Optional[:class:`~discord.User`]
+            The user sharing a server with the bot with the associated name. If not found
+            then ``None`` is returned.
+        """
+
+        users = self.users
+
+        username, _, discriminator = name.rpartition('#')
+
+        # If # isn't found then "discriminator" actually has the username
+        if not username:
+            discriminator, username = username, discriminator
+
+        if discriminator == '0' or (len(discriminator) == 4 and discriminator.isdigit()):
+            pred = lambda u: u.name == username and u.discriminator == discriminator
+        else:
+            pred = lambda u: u.name == name or u.global_name == name
+
+        return utils.find(pred, users)
+
     def get_emoji(self, id: int, /) -> Optional[Emoji]:
         """Returns an emoji with the given ID.
 
