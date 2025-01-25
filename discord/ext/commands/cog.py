@@ -713,7 +713,7 @@ class Cog(metaclass=CogMeta):
             command.cog = self
             if command.parent is None:
                 try:
-                    bot.add_command(command)
+                    bot.add_command(command, guild=guild, guilds=guilds)
                 except Exception as e:
                     # undo our additions
                     for to_undo in self.__cog_commands__[:index]:

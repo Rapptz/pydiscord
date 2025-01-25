@@ -248,8 +248,51 @@ class BotBase(GroupMixin[None]):
 
     # GroupMixin overrides
 
-    @discord.utils.copy_doc(GroupMixin.add_command)
-    def add_command(self, command: Command[Any, ..., Any], /) -> None:
+    def add_command(
+        self,
+        command: Command[Any, ..., Any],
+        /,
+        *,
+        guild: Optional[Snowflake] = MISSING,
+        guilds: Sequence[Snowflake] = MISSING,
+    ) -> None:
+        """Adds a :class:`.Command` into the internal list of commands.
+
+        This is usually not called, instead the :meth:`~.GroupMixin.command` or
+        :meth:`~.GroupMixin.group` shortcut decorators are used instead.
+
+        .. versionchanged:: 1.4
+             Raise :exc:`.CommandRegistrationError` instead of generic :exc:`.ClientException`
+
+        .. versionchanged:: 2.0
+
+            ``command`` parameter is now positional-only.
+
+        Parameters
+        -----------
+        command: :class:`Command`
+            The command to add.
+        guild: Optional[:class:`~discord.abc.Snowflake`]
+            If the command is a hybrid command with an application command attached, then this
+            will be the guild the app command will be added to.
+            If not given, the app command will be global.
+
+            .. versionadded:: 2.3
+        guilds: List[:class:`~discord.abc.Snowflake`]
+            If the command is a hybrid command with an application command attached, then these
+            would be the guilds the app command will be added to.
+            If not given, the app command will be global. Cannot be mixed with
+            ``guild``.
+
+            .. versionadded:: 2.3
+
+        Raises
+        -------
+        CommandRegistrationError
+            If the command or its alias is already registered by different command.
+        TypeError
+            If the command passed is not a subclass of :class:`.Command`. Or, guild and guilds were both given.
+        """
         super().add_command(command)
         if isinstance(command, (HybridCommand, HybridGroup)) and command.app_command:
             # If a cog is also inheriting from app_commands.Group then it'll also
@@ -257,7 +300,7 @@ class BotBase(GroupMixin[None]):
             # hybrid commands as slash commands. This check just terminates that recursion
             # from happening
             if command.cog is None or not command.cog.__cog_is_app_commands_group__:
-                self.tree.add_command(command.app_command)
+                self.tree.add_command(command.app_command, guild=guild, guilds=guilds)
 
     @discord.utils.copy_doc(GroupMixin.remove_command)
     def remove_command(self, name: str, /) -> Optional[Command[Any, ..., Any]]:
@@ -759,23 +802,27 @@ class BotBase(GroupMixin[None]):
 
             .. versionadded:: 2.0
         guild: Optional[:class:`~discord.abc.Snowflake`]
-            If the cog is an application command group, then this would be the
-            guild where the cog group would be added to. If not given then
-            it becomes a global command instead.
+            If the cog has application commands, then this would
+            the guild the app commands will be added to.
+            If not given, all app commands will be global.
 
+            .. versionchanged:: 2.3
+                This kwarg is now also used by hybrid app commands.
             .. versionadded:: 2.0
         guilds: List[:class:`~discord.abc.Snowflake`]
-            If the cog is an application command group, then this would be the
-            guilds where the cog group would be added to. If not given then
-            it becomes a global command instead. Cannot be mixed with
+            If the cog has application commands, then these
+            would the guilds the app commands will be added to.
+            If not given, all app commands will be global. Cannot be mixed with
             ``guild``.
 
+            .. versionchanged:: 2.3
+                This kwarg is now also used by hybrid app commands.
             .. versionadded:: 2.0
 
         Raises
         -------
         TypeError
-            The cog does not inherit from :class:`.Cog`.
+            The cog does not inherit from :class:`.Cog`. Or, guild and guilds were both given.
         CommandError
             An error happened during loading.
         ClientException
