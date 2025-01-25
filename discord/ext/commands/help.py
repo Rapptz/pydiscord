@@ -1248,18 +1248,17 @@ class DefaultHelpCommand(HelpCommand):
 
         no_category = f'\u200b{self.no_category}:'
 
-        def get_category(command, *, no_category=no_category):
-            cog = command.cog
+        def get_cog_name(cog, *, no_category=no_category):
             return cog.qualified_name + ':' if cog is not None else no_category
+        
+        cogs = sorted(mapping.keys(), key=get_cog_name)
+        max_size = max([self.get_max_size(mapping[cog]) for cog in mapping], default=0)
 
-        filtered = await self.filter_commands(bot.commands, sort=True, key=get_category)
-        max_size = self.get_max_size(filtered)
-        to_iterate = itertools.groupby(filtered, key=get_category)
-
-        # Now we can add the commands to the page.
-        for category, commands in to_iterate:
-            commands = sorted(commands, key=lambda c: c.name) if self.sort_commands else list(commands)
-            self.add_indented_commands(commands, heading=category, max_size=max_size)
+        for cog in cogs:
+            commands = await self.filter_commands(mapping[cog])
+            if self.sort_commands:
+                commands = sorted(commands, key=lambda c: c.name)
+            self.add_indented_commands(commands, heading=get_cog_name(cog), max_size=max_size)
 
         note = self.get_ending_note()
         if note:
