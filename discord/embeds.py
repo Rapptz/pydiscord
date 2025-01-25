@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Mapping, Optional, Protocol, TYPE_CHECKING, 
 
 from . import utils
 from .colour import Colour
+from .flags import AttachmentFlags, EmbedFlags
 
 # fmt: off
 __all__ = (
@@ -76,6 +77,7 @@ if TYPE_CHECKING:
         proxy_url: Optional[str]
         height: Optional[int]
         width: Optional[int]
+        flags: Optional[AttachmentFlags]
 
     class _EmbedVideoProxy(Protocol):
         url: Optional[str]
@@ -146,6 +148,10 @@ class Embed:
     colour: Optional[Union[:class:`Colour`, :class:`int`]]
         The colour code of the embed. Aliased to ``color`` as well.
         This can be set during initialisation.
+    flags: Optional[:class:`EmbedFlags`]
+        This embed flags.
+
+        .. versionadded:: 2.5
     """
 
     __slots__ = (
@@ -162,6 +168,7 @@ class Embed:
         '_author',
         '_fields',
         'description',
+        'flags',
     )
 
     def __init__(
@@ -181,6 +188,7 @@ class Embed:
         self.type: EmbedType = type
         self.url: Optional[str] = url
         self.description: Optional[str] = description
+        self.flags: Optional[EmbedFlags] = None
 
         if self.title is not None:
             self.title = str(self.title)
@@ -244,6 +252,11 @@ class Embed:
                 continue
             else:
                 setattr(self, '_' + attr, value)
+
+        try:
+            self.flags = EmbedFlags._from_value(data['flags'])
+        except KeyError:
+            pass
 
         return self
 
@@ -399,11 +412,15 @@ class Embed:
         - ``proxy_url``
         - ``width``
         - ``height``
+        - ``flags``
 
         If the attribute has no value then ``None`` is returned.
         """
         # Lying to the type checker for better developer UX.
-        return EmbedProxy(getattr(self, '_image', {}))  # type: ignore
+        data = getattr(self, '_image', {})
+        if 'flags' in data:
+            data['flags'] = AttachmentFlags._from_value(data['flags'])
+        return EmbedProxy(data)  # type: ignore
 
     def set_image(self, *, url: Optional[Any]) -> Self:
         """Sets the image for the embed content.

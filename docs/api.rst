@@ -5708,6 +5708,14 @@ SKUFlags
 .. autoclass:: SKUFlags()
     :members:
 
+EmbedFlags
+~~~~~~~~~~
+
+.. attributetable:: EmbedFlags
+
+.. autoclass:: EmbedFlags()
+    :members:
+
 ForumTag
 ~~~~~~~~~
 
