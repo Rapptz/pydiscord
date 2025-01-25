@@ -3301,6 +3301,8 @@ class Guild(Hashable):
             automatically set to the appropriate entity type. If no channel
             is passed then the entity type is assumed to be
             :attr:`EntityType.external`
+        privacy_level: :class:`PrivacyLevel`
+            The privacy level of the scheduled event.
         image: :class:`bytes`
             The image of the scheduled event.
         location: :class:`str`
