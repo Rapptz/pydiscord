@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: discordpy\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-26 03:41+0000\n"
-"PO-Revision-Date: 2024-04-17 02:43\n"
+"PO-Revision-Date: 2024-12-10 06:46\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
 "MIME-Version: 1.0\n"
@@ -27,7 +27,7 @@ msgstr "このページでは、特定のバージョンの新機能や変更さ
 
 #: ../../whats_new.rst:17
 msgid "v2.3.2"
-msgstr ""
+msgstr "v2.3.2"
 
 #: ../../whats_new.rst:20
 #: ../../whats_new.rst:37
@@ -39,63 +39,63 @@ msgstr "バグ修正"
 
 #: ../../whats_new.rst:22
 msgid "Fix the ``name`` parameter not being respected when sending a :class:`CustomActivity`."
-msgstr ""
+msgstr ":class:`CustomActivity`クラスを送信したときに、`name`パラメーターが参照されない問題を修正しました。"
 
 #: ../../whats_new.rst:23
 msgid "Fix :attr:`Intents.emoji` and :attr:`Intents.emojis_and_stickers` having swapped alias values (:issue:`9471`)."
-msgstr ""
+msgstr ":attr:`Intents.emoji` と :attr:`Intents.emojis_and_stickers` のエイリアス値が入れ替わっている問題を修正しました。 (:issue:`9471`)"
 
 #: ../../whats_new.rst:24
 msgid "Fix ``NameError`` when using :meth:`abc.GuildChannel.create_invite` (:issue:`9505`)."
-msgstr ""
+msgstr ":meth:`abc.GuildChannel.create_invite` を使用した際に発生する ``NameError`` を修正しました。 (:issue:`9505`)"
 
 #: ../../whats_new.rst:25
 msgid "Fix crash when disconnecting during the middle of a ``HELLO`` packet when using :class:`AutoShardedClient`."
-msgstr ""
+msgstr ":class:`AutoShardedClient` 使用中に ``HELLO`` パケットの途中で切断されたときに発生するクラッシュを修正しました。"
 
 #: ../../whats_new.rst:26
 msgid "Fix overly eager escape behaviour for lists and header markdown in :func:`utils.escape_markdown` (:issue:`9516`)."
-msgstr ""
+msgstr ":func:`utils.escape_markdown` におけるリストおよびヘッダーマークダウンのエスケープ動作が過剰に働く問題を修正しました。 (:issue:`9516`)"
 
 #: ../../whats_new.rst:27
 msgid "Fix voice websocket not being closed before being replaced by a new one (:issue:`9518`)."
-msgstr ""
+msgstr "新しいものに置き換えられる前に音声のウェブソケットが閉じない問題を修正しました。(:issue:`9518`)"
 
 #: ../../whats_new.rst:28
 msgid "|commands| Fix the wrong :meth:`~ext.commands.HelpCommand.on_help_command_error` being called when ejected from a cog."
-msgstr ""
+msgstr "|commands| Cogから:meth:`~ext.commands.HelpCommand.on_help_command_error`を取り出した時に呼び出される問題を修正しました。"
 
 #: ../../whats_new.rst:29
 msgid "|commands| Fix ``=None`` being displayed in :attr:`~ext.commands.Command.signature`."
-msgstr ""
+msgstr "|commands| :attr:`~ext.commands.Command.signature`で``=None``が表示されるように修正しました。"
 
 #: ../../whats_new.rst:34
 msgid "v2.3.1"
-msgstr ""
+msgstr "v2.3.1"
 
 #: ../../whats_new.rst:39
 msgid "Fix username lookup in :meth:`Guild.get_member_named` (:issue:`9451`)."
-msgstr ""
+msgstr ":meth:`Guild.get_member_named` におけるユーザー名検索を修正しました。 (:issue:`9451`)"
 
 #: ../../whats_new.rst:41
 msgid "Use cache data first for :attr:`Interaction.channel` instead of API data."
-msgstr ""
+msgstr "APIのデータの代わりに:attr:`Interaction.channel`のキャッシュのデータをはじめに利用します。"
 
 #: ../../whats_new.rst:41
 msgid "This bug usually manifested in incomplete channel objects (e.g. no ``overwrites``) because Discord does not provide this data."
-msgstr ""
+msgstr "このバグは通常、不完全なチャンネルオブジェクト（例: ``overwrites`` がないなど）として現れていました。これはDiscordがそのデータを提供しないためです。"
 
 #: ../../whats_new.rst:43
 msgid "Fix false positives in :meth:`PartialEmoji.from_str` inappropriately setting ``animated`` to ``True`` (:issue:`9456`, :issue:`9457`)."
-msgstr ""
+msgstr ":meth:`PartialEmoji.from_str` において、``animated`` が不適切に ``True`` に設定されるという誤検知の問題を修正しました (:issue:`9456`, :issue:`9457`)"
 
 #: ../../whats_new.rst:44
 msgid "Fix certain select types not appearing in :attr:`Message.components` (:issue:`9462`)."
-msgstr ""
+msgstr ":attr:`Message.components` に特定のセレクトタイプが表示されない問題を修正しました。 (:issue:`9462`)"
 
 #: ../../whats_new.rst:45
 msgid "|commands| Change lookup order for :class:`~ext.commands.MemberConverter` and :class:`~ext.commands.UserConverter` to prioritise usernames instead of nicknames."
-msgstr ""
+msgstr "|commands| :class:`~ext.commands.MemberConverter` と :class:`~ext.commands.UserConverter` の検索順序を変更し、ニックネームよりもユーザー名を優先するようにしました。"
 
 #: ../../whats_new.rst:50
 msgid "v2.3.0"

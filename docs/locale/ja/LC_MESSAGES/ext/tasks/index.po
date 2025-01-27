@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: discordpy\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-06-21 01:17+0000\n"
-"PO-Revision-Date: 2024-04-17 02:43\n"
+"PO-Revision-Date: 2024-12-10 06:26\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
 "MIME-Version: 1.0\n"
@@ -27,7 +27,7 @@ msgstr "discord.ext.tasks API リファレンス"
 
 #: ../../index.rst:7
 msgid "Welcome to discord.py"
-msgstr "discord.py へようこそ。"
+msgstr "discord.py へようこそ"
 
 #: ../../index.rst:12
 msgid "discord.py is a modern, easy to use, feature-rich, and async ready API wrapper for Discord."
