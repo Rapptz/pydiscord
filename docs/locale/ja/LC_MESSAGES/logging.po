@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: discordpy\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-26 03:41+0000\n"
-"PO-Revision-Date: 2024-04-17 02:43\n"
+"PO-Revision-Date: 2024-12-10 06:46\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
 "MIME-Version: 1.0\n"
@@ -47,7 +47,7 @@ msgstr "特に、 ``DEBUG`` といった冗長なイベントレベルを設定�
 
 #: ../../logging.rst:46
 msgid "If you want the logging configuration the library provides to affect all loggers rather than just the ``discord`` logger, you can pass ``root_logger=True`` inside :meth:`Client.run`:"
-msgstr ""
+msgstr "ライブラリが提供する logging 構成が、``discord`` ロガーだけでなく、すべてのロガーに影響を与えるようにしたい場合は、:meth:`Client.run` の中に、 ``root_logger=True`` を渡すことができます:"
 
 #: ../../logging.rst:52
 msgid "If you want to setup logging using the library provided configuration without using :meth:`Client.run`, you can use :func:`discord.utils.setup_logging`:"
