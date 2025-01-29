@@ -310,8 +310,9 @@ class AsyncWebhookAdapter:
         files: Optional[Sequence[File]] = None,
         thread_id: Optional[int] = None,
         wait: bool = False,
+        has_view: bool = False,
     ) -> Response[Optional[MessagePayload]]:
-        params = {'wait': int(wait)}
+        params = {'wait': int(wait), 'with_components': int(has_view)}
         if thread_id:
             params['thread_id'] = thread_id
         route = Route('POST', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
@@ -1710,10 +1711,9 @@ class Webhook(BaseWebhook):
 
             .. versionadded:: 1.4
         view: :class:`discord.ui.View`
-            The view to send with the message. You can only send a view
-            if this webhook is not partial and has state attached. A
-            webhook has state attached if the webhook is managed by the
-            library.
+            The view to send with the message. If the webhook is partial or
+            is not managed by the library, then you can only send URL buttons.
+            Otherwise, you can send views with any type of components.
 
             .. versionadded:: 2.0
         thread: :class:`~discord.abc.Snowflake`
@@ -1765,7 +1765,8 @@ class Webhook(BaseWebhook):
             The length of ``embeds`` was invalid, there was no token
             associated with this webhook or ``ephemeral`` was passed
             with the improper webhook type or there was no state
-            attached with this webhook when giving it a view.
+            attached with this webhook when giving it a view that had
+            components other than URL buttons.
 
         Returns
         ---------
@@ -1795,13 +1796,15 @@ class Webhook(BaseWebhook):
             wait = True
 
         if view is not MISSING:
-            if isinstance(self._state, _WebhookState):
-                raise ValueError('Webhook views require an associated state with the webhook')
-
             if not hasattr(view, '__discord_ui_view__'):
                 raise TypeError(f'expected view parameter to be of type View not {view.__class__.__name__}')
 
-            if ephemeral is True and view.timeout is None:
+            if isinstance(self._state, _WebhookState) and not view._is_stateless():
+                raise ValueError(
+                    'Webhook views with any component other than URL buttons require an associated state with the webhook'
+                )
+
+            if ephemeral is True and view.timeout is None and not view._is_stateless():
                 view.timeout = 15 * 60.0
 
         if thread_name is not MISSING and thread is not MISSING:
@@ -1845,6 +1848,7 @@ class Webhook(BaseWebhook):
                 files=params.files,
                 thread_id=thread_id,
                 wait=wait,
+                has_view=view is not MISSING,
             )
 
         msg = None

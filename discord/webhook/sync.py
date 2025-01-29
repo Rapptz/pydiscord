@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from ..message import Attachment
     from ..abc import Snowflake
     from ..state import ConnectionState
+    from ..ui import View
     from ..types.webhook import (
         Webhook as WebhookPayload,
     )
@@ -290,8 +291,9 @@ class WebhookAdapter:
         files: Optional[Sequence[File]] = None,
         thread_id: Optional[int] = None,
         wait: bool = False,
+        has_view: bool = False,
     ) -> MessagePayload:
-        params = {'wait': int(wait)}
+        params = {'wait': int(wait), 'with_components': int(has_view)}
         if thread_id:
             params['thread_id'] = thread_id
         route = Route('POST', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
@@ -919,6 +921,7 @@ class SyncWebhook(BaseWebhook):
         silent: bool = False,
         applied_tags: List[ForumTag] = MISSING,
         poll: Poll = MISSING,
+        view: View = MISSING,
     ) -> Optional[SyncWebhookMessage]:
         """Sends a message using the webhook.
 
@@ -991,6 +994,13 @@ class SyncWebhook(BaseWebhook):
                 When sending a Poll via webhook, you cannot manually end it.
 
             .. versionadded:: 2.4
+        view: :class:`~discord.ui.View`
+            The view to send with the message. This can only have URL buttons, which donnot
+            require a state to be attached to it.
+
+            If you want to send a view with any component attached to it, check :meth:`Webhook.send`.
+
+            .. versionadded:: 2.5
 
         Raises
         --------
@@ -1004,8 +1014,9 @@ class SyncWebhook(BaseWebhook):
             You specified both ``embed`` and ``embeds`` or ``file`` and ``files``
             or ``thread`` and ``thread_name``.
         ValueError
-            The length of ``embeds`` was invalid or
-            there was no token associated with this webhook.
+            The length of ``embeds`` was invalid, there was no token
+            associated with this webhook or you tried to send a view
+            with components other than URL buttons.
 
         Returns
         ---------
@@ -1026,6 +1037,13 @@ class SyncWebhook(BaseWebhook):
             flags.suppress_notifications = silent
         else:
             flags = MISSING
+
+        if view is not MISSING:
+            if not hasattr(view, '__discord_ui_view__'):
+                raise TypeError(f'expected view parameter to be of type View not {view.__class__.__name__}')
+
+            if not view._is_stateless():
+                raise ValueError('SyncWebhook views can only contain URL buttons')
 
         if thread_name is not MISSING and thread is not MISSING:
             raise TypeError('Cannot mix thread_name and thread keyword arguments.')
@@ -1050,6 +1068,7 @@ class SyncWebhook(BaseWebhook):
             flags=flags,
             applied_tags=applied_tag_ids,
             poll=poll,
+            view=view,
         ) as params:
             adapter: WebhookAdapter = _get_webhook_adapter()
             thread_id: Optional[int] = None
@@ -1065,6 +1084,7 @@ class SyncWebhook(BaseWebhook):
                 files=params.files,
                 thread_id=thread_id,
                 wait=wait,
+                has_view=view is not MISSING,
             )
 
         msg = None
