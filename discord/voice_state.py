@@ -344,7 +344,7 @@ class VoiceConnectionState:
 
         elif self.state is not ConnectionFlowState.disconnected:
             # eventual consistency
-            if previous_token == self.token and previous_server_id == self.server_id and previous_token == self.token:
+            if previous_token == self.token and previous_server_id == self.server_id and previous_endpoint == self.endpoint:
                 return
 
             _log.debug('Unexpected server update event, attempting to handle')
