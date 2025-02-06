@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from .parameters import Parameter
 
     from types import TracebackType
+    from ._types import ContextT
 
     BE = TypeVar('BE', bound=BaseException)
 
@@ -83,8 +84,8 @@ def is_cog(obj: Any) -> TypeGuard[Cog]:
 
 
 class DeferTyping:
-    def __init__(self, ctx: Context[BotT], *, ephemeral: bool):
-        self.ctx: Context[BotT] = ctx
+    def __init__(self, ctx: ContextT, *, ephemeral: bool):
+        self.ctx: ContextT = ctx
         self.ephemeral: bool = ephemeral
 
     async def do_defer(self) -> None:

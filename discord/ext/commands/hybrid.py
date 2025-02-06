@@ -531,7 +531,7 @@ class HybridCommand(Command[CogT, P, T]):
         if self.app_command is not None:
             self.app_command.binding = value
 
-    async def can_run(self, ctx: Context[BotT], /) -> bool:
+    async def can_run(self, ctx: ContextT, /) -> bool:
         if not self.enabled:
             raise DisabledCommand(f'{self.name} command is disabled')
 
@@ -540,7 +540,7 @@ class HybridCommand(Command[CogT, P, T]):
         else:
             return await super().can_run(ctx)
 
-    async def _parse_arguments(self, ctx: Context[BotT]) -> None:
+    async def _parse_arguments(self, ctx: ContextT) -> None:
         interaction = ctx.interaction
         if interaction is None:
             return await super()._parse_arguments(ctx)
@@ -700,14 +700,14 @@ class HybridGroup(Group[CogT, P, T]):
         if fallback:
             fallback.binding = value
 
-    async def can_run(self, ctx: Context[BotT], /) -> bool:
+    async def can_run(self, ctx: ContextT, /) -> bool:
         fallback = self._fallback_command
         if ctx.interaction is not None and fallback:
             return await fallback._check_can_run(ctx.interaction)
         else:
             return await super().can_run(ctx)
 
-    async def _parse_arguments(self, ctx: Context[BotT]) -> None:
+    async def _parse_arguments(self, ctx: ContextT) -> None:
         interaction = ctx.interaction
         fallback = self._fallback_command
         if interaction is not None and fallback:

@@ -227,7 +227,7 @@ def wrap_callback(coro: Callable[P, Coro[T]], /) -> Callable[P, Coro[Optional[T]
 
 
 def hooked_wrapped_callback(
-    command: Command[Any, ..., Any], ctx: Context[BotT], coro: Callable[P, Coro[T]], /
+    command: Command[Any, ..., Any], ctx: ContextT, coro: Callable[P, Coro[T]], /
 ) -> Callable[P, Coro[Optional[T]]]:
     @functools.wraps(coro)
     async def wrapped(*args: P.args, **kwargs: P.kwargs) -> Optional[T]:
@@ -567,7 +567,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         self.__init__(self.callback, **dict(self.__original_kwargs__, **kwargs))
         self.cog = cog
 
-    async def __call__(self, context: Context[BotT], /, *args: P.args, **kwargs: P.kwargs) -> T:
+    async def __call__(self, context: ContextT, /, *args: P.args, **kwargs: P.kwargs) -> T:
         """|coro|
 
         Calls the internal callback that the command holds.
@@ -626,7 +626,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         else:
             return self.copy()
 
-    async def dispatch_error(self, ctx: Context[BotT], error: CommandError, /) -> None:
+    async def dispatch_error(self, ctx: ContextT, error: CommandError, /) -> None:
         ctx.command_failed = True
         cog = self.cog
         try:
@@ -649,7 +649,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         finally:
             ctx.bot.dispatch('command_error', ctx, error)
 
-    async def transform(self, ctx: Context[BotT], param: Parameter, attachments: _AttachmentIterator, /) -> Any:
+    async def transform(self, ctx: ContextT, param: Parameter, attachments: _AttachmentIterator, /) -> Any:
         converter = param.converter
         consume_rest_is_special = param.kind == param.KEYWORD_ONLY and not self.rest_is_raw
         view = ctx.view
@@ -714,7 +714,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         # type-checker fails to narrow argument
         return await run_converters(ctx, converter, argument, param)  # type: ignore
 
-    async def _transform_greedy_pos(self, ctx: Context[BotT], param: Parameter, required: bool, converter: Any) -> Any:
+    async def _transform_greedy_pos(self, ctx: ContextT, param: Parameter, required: bool, converter: Any) -> Any:
         view = ctx.view
         result = []
         while not view.eof:
@@ -735,7 +735,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             return await param.get_default(ctx)
         return result
 
-    async def _transform_greedy_var_pos(self, ctx: Context[BotT], param: Parameter, converter: Any) -> Any:
+    async def _transform_greedy_var_pos(self, ctx: ContextT, param: Parameter, converter: Any) -> Any:
         view = ctx.view
         previous = view.index
         try:
@@ -829,7 +829,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
     def __str__(self) -> str:
         return self.qualified_name
 
-    async def _parse_arguments(self, ctx: Context[BotT]) -> None:
+    async def _parse_arguments(self, ctx: ContextT) -> None:
         ctx.args = [ctx] if self.cog is None else [self.cog, ctx]
         ctx.kwargs = {}
         args = ctx.args
@@ -865,7 +865,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         if not self.ignore_extra and not view.eof:
             raise TooManyArguments('Too many arguments passed to ' + self.qualified_name)
 
-    async def call_before_hooks(self, ctx: Context[BotT], /) -> None:
+    async def call_before_hooks(self, ctx: ContextT, /) -> None:
         # now that we're done preparing we can call the pre-command hooks
         # first, call the command local hook:
         cog = self.cog
@@ -890,7 +890,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         if hook is not None:
             await hook(ctx)
 
-    async def call_after_hooks(self, ctx: Context[BotT], /) -> None:
+    async def call_after_hooks(self, ctx: ContextT, /) -> None:
         cog = self.cog
         if self._after_invoke is not None:
             instance = getattr(self._after_invoke, '__self__', cog)
@@ -909,7 +909,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         if hook is not None:
             await hook(ctx)
 
-    def _prepare_cooldowns(self, ctx: Context[BotT]) -> None:
+    def _prepare_cooldowns(self, ctx: ContextT) -> None:
         if self._buckets.valid:
             dt = ctx.message.edited_at or ctx.message.created_at
             current = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
@@ -919,7 +919,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 if retry_after:
                     raise CommandOnCooldown(bucket, retry_after, self._buckets.type)  # type: ignore
 
-    async def prepare(self, ctx: Context[BotT], /) -> None:
+    async def prepare(self, ctx: ContextT, /) -> None:
         ctx.command = self
 
         if not await self.can_run(ctx):
@@ -943,7 +943,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 await self._max_concurrency.release(ctx)
             raise
 
-    def is_on_cooldown(self, ctx: Context[BotT], /) -> bool:
+    def is_on_cooldown(self, ctx: ContextT, /) -> bool:
         """Checks whether the command is currently on cooldown.
 
         .. versionchanged:: 2.0
@@ -970,7 +970,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         current = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
         return bucket.get_tokens(current) == 0
 
-    def reset_cooldown(self, ctx: Context[BotT], /) -> None:
+    def reset_cooldown(self, ctx: ContextT, /) -> None:
         """Resets the cooldown on this command.
 
         .. versionchanged:: 2.0
@@ -987,7 +987,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             if bucket is not None:
                 bucket.reset()
 
-    def get_cooldown_retry_after(self, ctx: Context[BotT], /) -> float:
+    def get_cooldown_retry_after(self, ctx: ContextT, /) -> float:
         """Retrieves the amount of seconds before this command can be tried again.
 
         .. versionadded:: 1.4
@@ -1017,7 +1017,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         return 0.0
 
-    async def invoke(self, ctx: Context[BotT], /) -> None:
+    async def invoke(self, ctx: ContextT, /) -> None:
         await self.prepare(ctx)
 
         # terminate the invoked_subcommand chain.
@@ -1028,7 +1028,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         injected = hooked_wrapped_callback(self, ctx, self.callback)  # type: ignore
         await injected(*ctx.args, **ctx.kwargs)  # type: ignore
 
-    async def reinvoke(self, ctx: Context[BotT], /, *, call_hooks: bool = False) -> None:
+    async def reinvoke(self, ctx: ContextT, /, *, call_hooks: bool = False) -> None:
         ctx.command = self
         await self._parse_arguments(ctx)
 
@@ -1231,7 +1231,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         return ' '.join(result)
 
-    async def can_run(self, ctx: Context[BotT], /) -> bool:
+    async def can_run(self, ctx: ContextT, /) -> bool:
         """|coro|
 
         Checks if the command can be executed by checking all the predicates
@@ -1623,7 +1623,7 @@ class Group(GroupMixin[CogT], Command[CogT, P, T]):
             ret.add_command(cmd.copy())
         return ret
 
-    async def invoke(self, ctx: Context[BotT], /) -> None:
+    async def invoke(self, ctx: ContextT, /) -> None:
         ctx.invoked_subcommand = None
         ctx.subcommand_passed = None
         early_invoke = not self.invoke_without_command
@@ -1654,7 +1654,7 @@ class Group(GroupMixin[CogT], Command[CogT, P, T]):
             view.previous = previous
             await super().invoke(ctx)
 
-    async def reinvoke(self, ctx: Context[BotT], /, *, call_hooks: bool = False) -> None:
+    async def reinvoke(self, ctx: ContextT, /, *, call_hooks: bool = False) -> None:
         ctx.invoked_subcommand = None
         early_invoke = not self.invoke_without_command
         if early_invoke:
@@ -1991,7 +1991,7 @@ def check_any(*checks: Check[ContextT]) -> Check[ContextT]:
         else:
             unwrapped.append(pred)
 
-    async def predicate(ctx: Context[BotT]) -> bool:
+    async def predicate(ctx: ContextT) -> bool:
         errors = []
         for func in unwrapped:
             try:
@@ -2038,7 +2038,7 @@ def has_role(item: Union[int, str], /) -> Check[Any]:
         The name or ID of the role to check.
     """
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         if ctx.guild is None:
             raise NoPrivateMessage()
 
@@ -2199,7 +2199,7 @@ def has_permissions(**perms: bool) -> Check[Any]:
     if invalid:
         raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         permissions = ctx.permissions
 
         missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
@@ -2224,7 +2224,7 @@ def bot_has_permissions(**perms: bool) -> Check[Any]:
     if invalid:
         raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         permissions = ctx.bot_permissions
 
         missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
@@ -2251,7 +2251,7 @@ def has_guild_permissions(**perms: bool) -> Check[Any]:
     if invalid:
         raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         if not ctx.guild:
             raise NoPrivateMessage
 
@@ -2277,7 +2277,7 @@ def bot_has_guild_permissions(**perms: bool) -> Check[Any]:
     if invalid:
         raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         if not ctx.guild:
             raise NoPrivateMessage
 
@@ -2303,7 +2303,7 @@ def dm_only() -> Check[Any]:
     .. versionadded:: 1.1
     """
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         if ctx.guild is not None:
             raise PrivateMessageOnly()
         return True
@@ -2328,7 +2328,7 @@ def guild_only() -> Check[Any]:
     # Due to implementation quirks, this check has to be re-implemented completely
     # to work with both app_commands and the command framework.
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         if ctx.guild is None:
             raise NoPrivateMessage()
         return True
@@ -2354,7 +2354,7 @@ def guild_only() -> Check[Any]:
     else:
 
         @functools.wraps(predicate)
-        async def wrapper(ctx: Context[BotT]):
+        async def wrapper(ctx: ContextT):
             return predicate(ctx)
 
         decorator.predicate = wrapper
@@ -2372,7 +2372,7 @@ def is_owner() -> Check[Any]:
     from :exc:`.CheckFailure`.
     """
 
-    async def predicate(ctx: Context[BotT]) -> bool:
+    async def predicate(ctx: ContextT) -> bool:
         if not await ctx.bot.is_owner(ctx.author):
             raise NotOwner('You do not own this bot.')
         return True
@@ -2400,7 +2400,7 @@ def is_nsfw() -> Check[Any]:
     # Due to implementation quirks, this check has to be re-implemented completely
     # to work with both app_commands and the command framework.
 
-    def predicate(ctx: Context[BotT]) -> bool:
+    def predicate(ctx: ContextT) -> bool:
         ch = ctx.channel
         if ctx.guild is None or (
             isinstance(ch, (discord.TextChannel, discord.Thread, discord.VoiceChannel)) and ch.is_nsfw()
@@ -2429,7 +2429,7 @@ def is_nsfw() -> Check[Any]:
     else:
 
         @functools.wraps(predicate)
-        async def wrapper(ctx: Context[BotT]):
+        async def wrapper(ctx: ContextT):
             return predicate(ctx)
 
         decorator.predicate = wrapper

@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from .bot import BotBase
     from .context import Context
     from .core import Command
+    from ._types import ContextT
 
 __all__ = (
     'CogMeta',
@@ -581,7 +582,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    def bot_check_once(self, ctx: Context[BotT]) -> bool:
+    def bot_check_once(self, ctx: ContextT) -> bool:
         """A special method that registers as a :meth:`.Bot.check_once`
         check.
 
@@ -591,7 +592,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    def bot_check(self, ctx: Context[BotT]) -> bool:
+    def bot_check(self, ctx: ContextT) -> bool:
         """A special method that registers as a :meth:`.Bot.check`
         check.
 
@@ -601,7 +602,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    def cog_check(self, ctx: Context[BotT]) -> bool:
+    def cog_check(self, ctx: ContextT) -> bool:
         """A special method that registers as a :func:`~discord.ext.commands.check`
         for every command and subcommand in this cog.
 
@@ -623,7 +624,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    async def cog_command_error(self, ctx: Context[BotT], error: Exception) -> None:
+    async def cog_command_error(self, ctx: ContextT, error: Exception) -> None:
         """|coro|
 
         A special method that is called whenever an error
@@ -665,7 +666,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    async def cog_before_invoke(self, ctx: Context[BotT]) -> None:
+    async def cog_before_invoke(self, ctx: ContextT) -> None:
         """|coro|
 
         A special method that acts as a cog local pre-invoke hook.
@@ -682,7 +683,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    async def cog_after_invoke(self, ctx: Context[BotT]) -> None:
+    async def cog_after_invoke(self, ctx: ContextT) -> None:
         """|coro|
 
         A special method that acts as a cog local post-invoke hook.

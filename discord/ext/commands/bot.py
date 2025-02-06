@@ -326,7 +326,7 @@ class BotBase(GroupMixin[None]):
 
     # Error handler
 
-    async def on_command_error(self, context: Context[BotT], exception: errors.CommandError, /) -> None:
+    async def on_command_error(self, context: ContextT, exception: errors.CommandError, /) -> None:
         """|coro|
 
         The default command error handler provided by the bot.
@@ -481,7 +481,7 @@ class BotBase(GroupMixin[None]):
         self.add_check(func, call_once=True)
         return func
 
-    async def can_run(self, ctx: Context[BotT], /, *, call_once: bool = False) -> bool:
+    async def can_run(self, ctx: ContextT, /, *, call_once: bool = False) -> bool:
         data = self._check_once if call_once else self._checks
 
         if len(data) == 0:
@@ -1344,7 +1344,7 @@ class BotBase(GroupMixin[None]):
         ctx.command = self.all_commands.get(invoker)
         return ctx
 
-    async def invoke(self, ctx: Context[BotT], /) -> None:
+    async def invoke(self, ctx: ContextT, /) -> None:
         """|coro|
 
         Invokes the command given under the invocation context and
